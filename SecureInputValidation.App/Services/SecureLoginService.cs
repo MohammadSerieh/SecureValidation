@@ -1,5 +1,7 @@
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using SecureInputValidation.Helpers;
+using BCrypt.Net;
+
 
 namespace SecureInputValidation.Services
 {
@@ -14,25 +16,19 @@ namespace SecureInputValidation.Services
 
         public bool LoginUser(string username, string password)
         {
-            string allowedSpecialCharacters = "!@#$%^&*?";
-
-            // Validate input using your helper
-            if (!ValidationHelpers.IsValidInput(username) ||
-                !ValidationHelpers.IsValidInput(password, allowedSpecialCharacters))
-                return false;
-
-            const string query = "SELECT COUNT(1) FROM Users WHERE Username = @Username AND Password = @Password";
-
+            const string query = "SELECT PasswordHash FROM Users WHERE Username = @Username";
             using (var connection = new SqlConnection(_connectionString))
             using (var command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Username", username);
-                command.Parameters.AddWithValue("@Password", password);
-
                 connection.Open();
-                int count = (int)command.ExecuteScalar();
-                return count > 0;
+                var result = command.ExecuteScalar();
+                if (result == null) return false;
+
+                string storedHash = result.ToString();
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
             }
         }
+
     }
 }

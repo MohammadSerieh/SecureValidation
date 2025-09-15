@@ -6,7 +6,8 @@ class Program
 {
     static void Main()
     {
-        string connectionString = "Server=localhost;Database=SecureAppDb;Trusted_Connection=True;";
+        string connectionString = "Server=localhost;Database=SecureAppDb;Trusted_Connection=True;TrustServerCertificate=True;";
+
         var loginService = new SecureLoginService(connectionString);
         var userService = new UserService(connectionString);
 
